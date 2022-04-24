@@ -71,7 +71,7 @@ function eventHandler(event) {
           case "工作經歷":
             return client.replyMessage(event.replyToken, {
               type: "text",
-              text: "$\nOurSong, KKCompany\n前端實習工程師\nMar 2022 - Present\n\n我使用 React 框架開發 NFT D-App，除了導入 web3.js 連接 Metamsk 錢包外，也實作與 ERC 合約互動的功能",
+              text: "$\nOurSong, KKCompany\n前端實習工程師\nMar 2022 - Present\n\n我使用 React 框架開發 NFT D-App，除了導入 web3.js 連接 Metamask 錢包，也實作與 ERC 智慧合約互動的功能",
               emojis: [
                 {
                   index: 0,
