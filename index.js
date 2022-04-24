@@ -1,126 +1,156 @@
 import { Client, middleware } from "@line/bot-sdk";
 import express from "express";
 
-// congig 物件 (middleware 及 create Client object 時會用到)
+// congig 物件 (middleware 及 create Client instance 時會用到)
 const config = {
-  channelAccessToken:
-    "zd8cP1SSEkhGFu3FoKC+rCGbHI4b3wPl6/bRd304LQUMEpGPVKBjQ008Y1RPvehWyjtOjavRmuGHRruAExcbIooBQ7WUdupcg/KeXZxD+9quTH2gznoXStbLPTWHQNMhIfkO8BHfzTWtj5Wpydp5JwdB04t89/1O/w1cDnyilFU=",
-  channelSecret: "feeae0027ae274090c262a6bff017ba1",
+  channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
+  channelSecret: process.env.CHANNEL_SECRET,
 };
 
 const app = express();
 
-//實作 webhook handler，並掛上用來轉譯的 middleware
+//實作 webhook handler
+//middleware 用來解析 req.body 及 驗證 signature
 app.post("/webhook", middleware(config), (req, res) => {
-  Promise.all(req.body.events.map(handleEvent))
-    .then((result) => res.json(result))
+  Promise.all(req.body.events.map(eventHandler))
+    .then((result) => {
+      res.json(result);
+    })
     .catch((err) => {
       console.error(err);
       res.status(500).end();
     });
 });
 
-//Client 用來傳訊息
+//client instance 用來傳送訊息，或用來取得使用者或內容的資訊
 const client = new Client(config);
 
-// event handler
-function handleEvent(event) {
+//實作 eventHandler，處理不同類型的 event
+function eventHandler(event) {
+  const msgTemplate = {
+    type: "template",
+    altText: "林哲漳的Line Bot",
+    template: {
+      type: "buttons",
+      thumbnailImageUrl:
+        "https://i.imgur.com/QuNIImS_d.webp?maxwidth=760&fidelity=grand.jpeg",
+      title: "想了解我什麼事？",
+      text: "林哲漳 Jerry Lin",
+      actions: [
+        {
+          label: "個人特質",
+          type: "message",
+          text: "個人特質",
+        },
+        {
+          label: "工作經歷",
+          type: "message",
+          text: "工作經歷",
+        },
+        {
+          label: "我的興趣",
+          type: "message",
+          text: "我的興趣",
+        },
+        {
+          label: "喜歡聽的音樂",
+          type: "message",
+          text: "喜歡聽的音樂",
+        },
+      ],
+    },
+  };
+
   switch (event.type) {
     case "follow":
-      return client.replyMessage(event.replyToken, {
-        type: "text",
-        text: "歡迎加入林哲漳的Line Bot!",
-      });
-
-    case "unfollow":
-      return client.replyMessage(event.replyToken, {
-        type: "text",
-        text: "歡迎再次使用！",
-      });
+      return client.replyMessage(event.replyToken, msgTemplate);
 
     case "message":
       if (event.message.type === "text") {
         switch (event.message.text) {
-          case "關於我":
-            return client.replyMessage(replyToken, {
-              type: "text",
-              text: "喜歡學習新事物，熱愛與不同領域背景的人互動，學習用不同觀點才思考問題。",
-            });
-          case "學歷":
-            return client.replyMessage(event.replyToken, {
-              type: "text",
-              text: "國立政治大學資管所\n2021 - 2023\n\n國立中正大學資管系\n2017 - 2021",
-            });
           case "工作經歷":
             return client.replyMessage(event.replyToken, {
               type: "text",
-              text: "OurSong, KKCompany\n前端實習工程師",
+              text: "$\nOurSong, KKCompany\n前端實習工程師\nMar 2022 - Present\n\n我使用 React 框架開發 NFT D-App，除了導入 web3.js 連接 Metamsk 錢包外，也實作與 ERC 合約互動的功能",
+              emojis: [
+                {
+                  index: 0,
+                  productId: "5ac22b23040ab15980c9b44d",
+                  emojiId: "002",
+                },
+              ],
             });
 
           case "個人特質":
             return client.replyMessage(event.replyToken, {
               type: "text",
-              text: `喜歡接觸新事物，熱愛與人互動，學習用不同角度思考問題`,
+              text: "$\n三個形容詞來代表自己：\n$專注細節\n$樂於溝通\n$抗壓性強\n\n我喜歡與人溝通，分享及聆聽彼此的想法，也熱愛學習不同的思考方式，從各種角度來思考問題",
+              emojis: [
+                {
+                  index: 0,
+                  productId: "5ac22b23040ab15980c9b44d",
+                  emojiId: "022",
+                },
+                {
+                  index: 14,
+                  productId: "5ac21a18040ab15980c9b43e",
+                  emojiId: "085",
+                },
+                {
+                  index: 20,
+                  productId: "5ac21a18040ab15980c9b43e",
+                  emojiId: "085",
+                },
+                {
+                  index: 26,
+                  productId: "5ac21a18040ab15980c9b43e",
+                  emojiId: "085",
+                },
+              ],
+            });
+
+          case "喜歡聽的音樂":
+            return client.replyMessage(event.replyToken, {
+              type: "text",
+              text: "$\nhttps://www.kkbox.com/tw/tc/playlist/HZvGqbjTzAH64-EQwS",
+              emojis: [
+                {
+                  index: 0,
+                  productId: "5ac2216f040ab15980c9b448",
+                  emojiId: "027",
+                },
+              ],
+            });
+
+          case "我的興趣":
+            return client.replyMessage(event.replyToken, {
+              type: "text",
+              text: "$ 美食探索\n$ 戶外運動\n$ 異國旅遊",
+              emojis: [
+                {
+                  index: 0,
+                  productId: "5ac1de17040ab15980c9b438",
+                  emojiId: "035",
+                },
+                {
+                  index: 7,
+                  productId: "5ac1de17040ab15980c9b438",
+                  emojiId: "125",
+                },
+                {
+                  index: 14,
+                  productId: "5ac1de17040ab15980c9b438",
+                  emojiId: "109",
+                },
+              ],
             });
 
           default:
-            return client.replyMessage(event.replyToken, {
-              type: "template",
-              altText: "林哲漳的Line Bot",
-              template: {
-                type: "buttons",
-                thumbnailImageUrl:
-                  "https://i.imgur.com/QuNIImS_d.webp?maxwidth=760&fidelity=grand.jpeg",
-                title: "想了解我什麼事？",
-                text: "林哲漳 Jerry Lin",
-                actions: [
-                  {
-                    label: "關於我",
-                    type: "message",
-                    text: "關於我",
-                  },
-                  {
-                    label: "學歷",
-                    type: "message",
-                    text: "學歷",
-                  },
-                  {
-                    label: "工作經歷",
-                    type: "message",
-                    text: "工作經歷",
-                  },
-                ],
-              },
-            });
+            return client.replyMessage(event.replyToken, msgTemplate);
         }
       }
   }
-
-  //replyMessage的第一個參數是 reply_token
-  //當使用者傳訊息給此 line bot，會產生一個reply_token
-  //bot會拿著這個token回覆傳訊息的使用者，且用完即丟
-  //第二個參數：要執行的動作
-
-  // switch (event.message.type) {
-  //   case "message":
-  //     if (event.message.text === "學歷") {
-  //       return client.replyMessage(event.replyToken, {
-  //         type: "text",
-  //         text: "國立政治大學 資訊管理學系 碩一",
-  //       });
-  //     } else if (event.message.text === "工作經歷") {
-  //       return client.replyMessage(event.replyToken, {
-  //         type: "text",
-  //         text: "前端實習工程師 OurSong, KKCompany",
-  //       });
-  //     } else {
-  //       return client.replyMessage(
-  //         event.replyToken,
-  //         "想知道些什麼呢？學歷或是工作經歷"
-  //       );
-  //     }
-  // }
 }
 
-// listen on port
+//監聽
 app.listen(process.env.PORT || 3000);
